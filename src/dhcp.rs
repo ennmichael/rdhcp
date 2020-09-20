@@ -31,6 +31,8 @@ struct RawMessage {
 impl RawMessage {
     const MAX_OPTIONS_SIZE: usize = 1024;
 
+    const MAX_SIZE: usize = Self::MAX_OPTIONS_SIZE + 236;
+
     fn decode(buf: &[u8]) -> Result<RawMessage> {
         if buf.len() < 236 { // TODO This isn't right, as at least some data must be present in `options`
             Err(Error::MessageDecoding(String::from("Invalid buffer: buffer too small")))
@@ -44,7 +46,7 @@ impl RawMessage {
             let mut file = [0; 128];
             utils::copy_slice(&mut file, &buf[108..236]);
 
-            let msg = RawMessage {
+            Ok(RawMessage {
                 op: buf[0],
                 htype: buf[1],
                 hlen: buf[2],
@@ -60,19 +62,34 @@ impl RawMessage {
                 sname,
                 file,
                 options,
-            };
-
-            Ok(msg)
+            })
         }
     }
 
     fn encode(&self, buf: &mut [u8]) -> Result<()> {
-        unimplemented!()
+        buf[0] = self.op;
+        buf[1] = self.htype;
+        buf[2] = self.hlen;
+        buf[3] = self.hops;
+        utils::copy_slice(&mut buf[4..], &self.xid.to_be_bytes());
+        utils::copy_slice(&mut buf[8..], &self.secs.to_be_bytes());
+        utils::copy_slice(&mut buf[10..], &self.flags.to_be_bytes());
+        utils::copy_slice(&mut buf[12..], &self.ciaddr);
+        utils::copy_slice(&mut buf[16..], &self.yiaddr);
+        utils::copy_slice(&mut buf[20..], &self.siaddr);
+        utils::copy_slice(&mut buf[24..], &self.giaddr);
+        utils::copy_slice(&mut buf[28..], &self.chaddr);
+        utils::copy_slice(&mut buf[44..], &self.sname);
+        utils::copy_slice(&mut buf[108..], &self.file);
+        utils::copy_slice(&mut buf[236..], &self.options);
+        Ok(())
     }
 }
 
 struct Message {
     op: MessageOp,
+    htype: u8,
+    hlen: u8,
     xid: TransactionID,
     broadcast: bool,
     ciaddr: Ipv4Addr,
@@ -118,8 +135,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn raw_message_decode() {
-        let mut buf = [0; 250];
+    fn raw_message_decode_encode() {
+        let mut buf = [0; RawMessage::MAX_SIZE];
         utils::copy_slice(&mut buf, &[
             1, // op
             1, // htype
@@ -157,5 +174,11 @@ mod tests {
         assert!(msg.file[1..].iter().all(|&x| x == 0u8));
         assert_eq!(msg.options[0], 11);
         assert!(msg.options[1..].iter().all(|&x| x == 0u8));
+
+        let mut encoded = [0; RawMessage::MAX_SIZE];
+        msg.encode(&mut encoded);
+        for (k, &v) in encoded.iter().enumerate() {
+            assert_eq!(buf[k], v);
+        }
     }
 }
