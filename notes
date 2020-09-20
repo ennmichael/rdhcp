@@ -1,0 +1,2 @@
+3.4: "Obtaining parameters with externally configured network address" wasn't completely clear to me:
+the reason why no leasing happens is because leasing is only meaningful when allocating addresses?
