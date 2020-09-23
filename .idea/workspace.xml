@@ -15,7 +15,11 @@
   <component name="ChangeListManager">
     <list default="true" id="b0ff3691-a46d-4a5e-bffc-99334295d525" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dhcp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/dhcp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dhcp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,10 +53,10 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
-  <component name="RunManager" selected="Cargo Command.Test dhcp::tests::raw_message_decode">
+  <component name="RunManager" selected="Cargo.Test">
     <configuration name="Test dhcp::tests::raw_message_decode" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="channel" value="DEFAULT" />
       <option name="command" value="test --package rdhcp --bin rdhcp dhcp::tests::raw_message_decode -- --exact" />
@@ -78,14 +82,9 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Cargo Command.Test" />
-      <item itemvalue="Cargo Command.Test dhcp::tests::raw_message_decode" />
+      <item itemvalue="Cargo.Test" />
+      <item itemvalue="Cargo.Test dhcp::tests::raw_message_decode" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Cargo Command.Test dhcp::tests::raw_message_decode" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
@@ -101,8 +100,19 @@
       <updated>1600445613539</updated>
       <workItem from="1600445614971" duration="1228000" />
       <workItem from="1600523525876" duration="5087000" />
-      <workItem from="1600602166388" duration="12157000" />
+      <workItem from="1600602166388" duration="19506000" />
+      <workItem from="1600682253694" duration="42000" />
+      <workItem from="1600699405000" duration="9869000" />
+      <workItem from="1600724831744" duration="17751000" />
     </task>
+    <task id="LOCAL-00001" summary="Added raw message encoding">
+      <created>1600618479988</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1600618479988</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -118,6 +128,11 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added raw message encoding" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added raw message encoding" />
   </component>
   <component name="WindowStateProjectService">
     <state x="140" y="50" width="1084" height="708" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1600612102175">
@@ -132,37 +147,37 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="330" y="209" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1366.768@0.0.1366.768" timestamp="1600526933964" />
-    <state x="448" y="165" key="FileChooserDialogImpl" timestamp="1600459460117">
+    <state x="448" y="165" key="FileChooserDialogImpl" timestamp="1600682293863">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="448" y="165" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1600459460117" />
-    <state width="1318" height="187" key="GridCell.Tab.0.bottom" timestamp="1600614173933">
+    <state x="448" y="165" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1600682293863" />
+    <state width="1318" height="187" key="GridCell.Tab.0.bottom" timestamp="1600819013676">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1318" height="187" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1600614173933" />
-    <state width="1318" height="187" key="GridCell.Tab.0.center" timestamp="1600614173933">
+    <state width="1318" height="187" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
+    <state width="1318" height="187" key="GridCell.Tab.0.center" timestamp="1600819013676">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1318" height="187" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1600614173933" />
-    <state width="1318" height="187" key="GridCell.Tab.0.left" timestamp="1600614173932">
+    <state width="1318" height="187" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
+    <state width="1318" height="187" key="GridCell.Tab.0.left" timestamp="1600819013674">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1318" height="187" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1600614173932" />
-    <state width="1318" height="187" key="GridCell.Tab.0.right" timestamp="1600614173933">
+    <state width="1318" height="187" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1600819013674" />
+    <state width="1318" height="187" key="GridCell.Tab.0.right" timestamp="1600819013676">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1318" height="187" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1600614173933" />
-    <state x="0" y="42" key="SettingsEditor" timestamp="1600523810602">
+    <state width="1318" height="187" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
+    <state x="0" y="42" key="SettingsEditor" timestamp="1600724818491">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="0" y="42" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1600523810602" />
-    <state x="282" y="143" key="Vcs.Push.Dialog.v2" timestamp="1600614753059">
+    <state x="0" y="42" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1600724818491" />
+    <state x="282" y="143" key="Vcs.Push.Dialog.v2" timestamp="1600618481083">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="282" y="143" key="Vcs.Push.Dialog.v2/0.0.1366.768@0.0.1366.768" timestamp="1600614753059" />
-    <state x="345" y="89" width="672" height="678" key="search.everywhere.popup" timestamp="1600603122739">
+    <state x="282" y="143" key="Vcs.Push.Dialog.v2/0.0.1366.768@0.0.1366.768" timestamp="1600618481083" />
+    <state x="345" y="89" width="672" height="678" key="search.everywhere.popup" timestamp="1600817384267">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="345" y="89" width="672" height="678" key="search.everywhere.popup/0.0.1366.768@0.0.1366.768" timestamp="1600603122739" />
+    <state x="345" y="89" width="672" height="678" key="search.everywhere.popup/0.0.1366.768@0.0.1366.768" timestamp="1600817384267" />
   </component>
 </project>
