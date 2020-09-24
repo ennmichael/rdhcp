@@ -189,12 +189,8 @@ enum MessageOption {
 }
 
 impl MessageOptions {
-    fn decode(
-        _sname: &[u8; RawMessage::SNAME_SIZE],
-        _file: &[u8; RawMessage::FILE_SIZE],
-        raw_options: &[u8; RawMessage::MAX_OPTIONS_SIZE],
-    ) -> Result<MessageOptions> {
-        let mut options = MessageOptions {
+    fn empty(message_type: MessageType) -> Self {
+        Self {
             subnet_mask: None,
             router: None,
             domain_name_server: None,
@@ -202,15 +198,22 @@ impl MessageOptions {
             requested_ip_addr: None,
             lease_time: None,
             option_overload: None,
-            message_type: MessageType::Discover,
+            message_type,
             server_identifier: None,
             parameter_request_list: None,
             message: None,
             renewal_time: None,
             rebinding_time: None,
             client_identifier: None,
-        };
+        }
+    }
 
+    fn decode(
+        _sname: &[u8],
+        _file: &[u8],
+        raw_options: &[u8],
+    ) -> Result<MessageOptions> {
+        let mut options = Self::empty(MessageType::Discover);
         let mut seen_type = false;
         let mut seen_end = false;
         let mut raw_options = raw_options.iter();
@@ -245,7 +248,7 @@ impl MessageOptions {
                 Some(MessageType) if seen_type => return Err(Error::InvalidOption),
                 Some(MessageType) => {
                     seen_type = true;
-                    options.message_type = dbg!(Self::load_message_type(&mut raw_options))?;
+                    options.message_type = Self::load_message_type(&mut raw_options)?;
                 }
                 Some(ServerIdentifier) =>
                     options.server_identifier = Some(Self::load_u32(&mut raw_options)?),
@@ -263,7 +266,7 @@ impl MessageOptions {
             }
         }
 
-        if dbg!(!seen_type) || dbg!(!seen_end) {
+        if !seen_type || !seen_end {
             return Err(Error::InvalidOption);
         }
 
@@ -354,17 +357,18 @@ impl MessageOptions {
         if length % 4 != 0 {
             Err(Error::InvalidOption)
         } else {
-            let mut result = Vec::new();
-
-            for mut ip_chunks in raw_options.take(length as usize).chunks(4).into_iter() {
-                let a = Self::next_byte(&mut ip_chunks)?;
-                let b = Self::next_byte(&mut ip_chunks)?;
-                let c = Self::next_byte(&mut ip_chunks)?;
-                let d = Self::next_byte(&mut ip_chunks)?;
-                result.push(Ipv4Addr::new(a, b, c, d));
-            }
-
-            Ok(result)
+            raw_options
+                .take(length as usize)
+                .chunks(4)
+                .into_iter()
+                .map(|mut ip_chunks| {
+                    let a = Self::next_byte(&mut ip_chunks)?;
+                    let b = Self::next_byte(&mut ip_chunks)?;
+                    let c = Self::next_byte(&mut ip_chunks)?;
+                    let d = Self::next_byte(&mut ip_chunks)?;
+                    Ok(Ipv4Addr::new(a, b, c, d))
+                })
+                .collect()
         }
     }
 
@@ -422,16 +426,11 @@ impl MessageOptions {
         raw_options: &mut impl Iterator<Item=&'a u8>
     ) -> Result<Vec<MessageOption>> {
         let length = Self::next_byte(raw_options)? as usize;
-        let result: Vec<_> = raw_options
+        Ok(raw_options
             .take(length)
             .filter_map(|&o| Self::decode_raw_option(o))
-            .collect();
-
-        if result.len() != length {
-            Err(Error::InvalidOption)
-        } else {
-            Ok(result)
-        }
+            .collect()
+        )
     }
 
     fn next_byte<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<u8> {
@@ -512,40 +511,93 @@ mod tests {
     }
 
     #[test]
-    fn options_decode() {
-        let sname = [0; RawMessage::SNAME_SIZE];
-        let file = [0; RawMessage::FILE_SIZE];
-        let mut raw_options = [0; RawMessage::MAX_OPTIONS_SIZE];
+    fn options_decode_simple() {
+        let mut raw_options = [0; RawMessage::MAX_OPTIONS_SIZE]; // Missing magic cookie
         assert_eq!(
-            MessageOptions::decode(&sname, &file, &raw_options),
+            MessageOptions::decode(&[], &[], &raw_options),
             Err(Error::InvalidOption),
         );
 
         raw_options[0] = 99;
         raw_options[1] = 130;
         raw_options[2] = 83;
-        raw_options[3] = 99;
+        raw_options[3] = 99; // Has magic cookie, but now missing end
         assert_eq!(
-            MessageOptions::decode(&sname, &file, &raw_options),
+            MessageOptions::decode(&[], &[], &raw_options),
             Err(Error::InvalidOption),
         );
 
-        raw_options[4] = 255; // Missing message type
+        raw_options[4] = 255; // Has end, but now missing message type
         assert_eq!(
-            MessageOptions::decode(&sname, &file, &raw_options),
+            MessageOptions::decode(&[], &[], &raw_options),
             Err(Error::InvalidOption),
         );
 
         raw_options[4] = 53;
         raw_options[5] = 1;
-        raw_options[6] = 2; // Has message type, but now missing end
+        raw_options[6] = 2; // Has message type DHCPOFFER, but now missing end
         assert_eq!(
-            MessageOptions::decode(&sname, &file, &raw_options),
+            MessageOptions::decode(&[], &[], &raw_options),
             Err(Error::InvalidOption),
         );
 
-        raw_options[7] = 255;
-        // TODO More precise check
-        assert!(MessageOptions::decode(&sname, &file, &raw_options).is_ok());
+        raw_options[7] = 255; // Now also has end
+        assert_eq!(
+            MessageOptions::decode(&[], &[], &raw_options),
+            Ok(MessageOptions::empty(MessageType::Offer)),
+        );
+    }
+
+    #[test]
+    fn options_decode_discover() {
+        let raw_options = [
+            0x63, 0x82, 0x53, 0x63, // Magic cookie
+            0x35, 0x01, 0x01, // Message type: DHCPDISCOVER
+            0x0c, 0x05, 0x64, 0x6f, 0x67, 0x67, 0x73, // Hostname: doggs
+            0x37, 0x0d, 0x01, 0x1c, 0x02, 0x03, 0x0f, 0x06, 0x77, 0x0c, 0x2c, 0x2f, 0x1a, 0x79, 0x2a,
+            // Parameter request list, including some options unknown to this implementation
+            0xff, // End
+        ];
+        let mut expected_options = MessageOptions::empty(MessageType::Discover);
+        expected_options.host_name = Some(Vec::from(b"doggs" as &[u8]));
+        expected_options.parameter_request_list = Some(vec![
+            MessageOption::SubnetMask,
+            MessageOption::Router,
+            MessageOption::DomainNameServer,
+            MessageOption::HostName,
+        ]);
+        assert_eq!(
+            MessageOptions::decode(&[], &[], &raw_options),
+            Ok(expected_options),
+        );
+    }
+
+    #[test]
+    fn options_decode_offer() {
+        let raw_options = [
+            0x63, 0x82, 0x53, 0x63, // Magic cookie
+            0x35, 0x01, 0x02, // Message type: DHCPOFFER
+            0x36, 0x04, 0x00, 0x00, 0x00, 0x02, // Server identifier: 2
+            0x33, 0x04, 0x00, 0x01, 0x51, 0x80, // Lease time: 86400s (1 day)
+            0x3a, 0x04, 0x00, 0x00, 0xa8, 0xc0, // Renewal time: 43200s (12 hours)
+            0x3b, 0x04, 0x00, 0x01, 0x27, 0x50, // Rebinding time: 75600s (21 hours)
+            0x01, 0x04, 0xff, 0xff, 0xff, 0x00, // Subnet mask: 255.255.255.0
+            0x1c, 0x04, 0xc0, 0xa8, 0x01, 0xff, // Broadcast address: 192.168.1.255
+            0x06, 0x04, 0xc0, 0xa8, 0x01, 0x01, // Domain name server: 192.168.1.1
+            0x03, 0x04, 0xc0, 0xa8, 0x01, 0x01, // Router: 192.168.1.1
+            0xff // End
+        ];
+        let mut expected_options = MessageOptions::empty(MessageType::Offer);
+        expected_options.server_identifier = Some(2);
+        expected_options.lease_time = Some(86400);
+        expected_options.renewal_time = Some(43200);
+        expected_options.rebinding_time = Some(75600);
+        expected_options.subnet_mask = Some(Ipv4Addr::new(255, 255, 255, 0));
+        expected_options.domain_name_server = Some(vec![Ipv4Addr::new(192, 168, 1, 1)]);
+        expected_options.router = Some(vec![Ipv4Addr::new(192, 168, 1, 1)]);
+        assert_eq!(
+            MessageOptions::decode(&[], &[], &raw_options),
+            Ok(expected_options),
+        );
     }
 }
