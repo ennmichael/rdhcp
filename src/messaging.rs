@@ -1,10 +1,10 @@
 use std::convert::TryInto;
 use std::net::Ipv4Addr;
-use std::result;
-
-use itertools::Itertools;
 
 use crate::utils::{self, Error, Result};
+
+mod options_decoding;
+mod options_encoding;
 
 struct RawMessage {
     op: u8,
@@ -86,7 +86,7 @@ impl RawMessage {
     }
 }
 
-struct Message {
+pub struct Message {
     op: MessageOp,
     htype: u8,
     hlen: u8,
@@ -119,38 +119,58 @@ impl Message {
             } else {
                 return Err(Error::MessageInterpretation(String::from("Flags field is invalid")));
             },
-            ciaddr: Ipv4Addr::new(raw.ciaddr[0], raw.ciaddr[1], raw.ciaddr[2], raw.ciaddr[3]),
-            yiaddr: Ipv4Addr::new(raw.yiaddr[0], raw.yiaddr[1], raw.yiaddr[2], raw.yiaddr[3]),
-            siaddr: Ipv4Addr::new(raw.siaddr[0], raw.siaddr[1], raw.siaddr[2], raw.siaddr[3]),
-            giaddr: Ipv4Addr::new(raw.giaddr[0], raw.giaddr[1], raw.giaddr[2], raw.giaddr[3]),
+            ciaddr: Ipv4Addr::from(raw.ciaddr),
+            yiaddr: Ipv4Addr::from(raw.yiaddr),
+            siaddr: Ipv4Addr::from(raw.siaddr),
+            giaddr: Ipv4Addr::from(raw.giaddr),
             options: MessageOptions::decode(&raw.sname, &raw.file, &raw.options)?,
         })
     }
 
-    fn decode(buf: &[u8]) -> Result<Message> {
+    pub fn decode(buf: &[u8]) -> Result<Message> {
         let raw = RawMessage::decode(buf)?;
         Ok(Message::from_raw(&raw)?)
     }
 
-    fn to_raw(&self) -> RawMessage {
-        unimplemented!()
+    fn to_raw(&self, hardware_address: [u8; 16]) -> Result<RawMessage> {
+        let mut msg = RawMessage {
+            op: self.op as u8,
+            htype: self.htype,
+            hlen: self.hlen,
+            hops: 0,
+            xid: self.xid.0,
+            secs: 0,
+            flags: self.broadcast as u16,
+            ciaddr: self.ciaddr.octets(),
+            yiaddr: self.yiaddr.octets(),
+            siaddr: self.siaddr.octets(),
+            giaddr: self.giaddr.octets(),
+            chaddr: hardware_address,
+            sname: [0; RawMessage::SNAME_SIZE],
+            file: [0; RawMessage::FILE_SIZE],
+            options: [0; RawMessage::MAX_OPTIONS_SIZE],
+        };
+        self.options.encode(&mut msg.options)?;
+        Ok(msg)
     }
 
-    fn encode(&self, buf: &mut [u8]) -> Result<()> {
-        let raw = self.to_raw();
+    pub fn encode(&self, buf: &mut [u8], hardware_address: [u8; 16]) -> Result<()> {
+        let raw = self.to_raw(hardware_address)?;
         Ok(raw.encode(buf)?)
     }
 }
 
-enum MessageOp {
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum MessageOp {
     Request = 1,
     Reply = 2,
 }
 
-struct TransactionID(u32);
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct TransactionID(u32);
 
 #[derive(Debug, Eq, PartialEq)]
-struct MessageOptions {
+pub struct MessageOptions {
     subnet_mask: Option<Ipv4Addr>,
     router: Option<Vec<Ipv4Addr>>,
     domain_name_server: Option<Vec<Ipv4Addr>>,
@@ -167,9 +187,9 @@ struct MessageOptions {
     client_identifier: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
-enum MessageOption {
+pub enum MessageOption {
     Pad = 0,
     SubnetMask = 1,
     Router = 3,
@@ -208,247 +228,26 @@ impl MessageOptions {
         }
     }
 
-    fn decode(
-        _sname: &[u8],
-        _file: &[u8],
-        raw_options: &[u8],
-    ) -> Result<MessageOptions> {
-        let mut options = Self::empty(MessageType::Discover);
-        let mut seen_type = false;
-        let mut seen_end = false;
-        let mut raw_options = raw_options.iter();
-
-        Self::check_magic_cookie(&mut raw_options)?;
-
-        loop {
-            use MessageOption::*;
-
-            let raw_option = Self::next_byte(&mut raw_options)?;
-            match Self::decode_raw_option(raw_option) {
-                Some(Pad) => continue,
-                Some(End) if seen_end => return Err(Error::InvalidOption),
-                Some(End) => {
-                    seen_end = true;
-                    break;
-                }
-                Some(SubnetMask) =>
-                    options.subnet_mask = Some(Self::load_ip_addr(&mut raw_options)?),
-                Some(Router) =>
-                    options.router = Some(Self::load_ip_addrs(&mut raw_options)?),
-                Some(DomainNameServer) =>
-                    options.domain_name_server = Some(Self::load_ip_addrs(&mut raw_options)?),
-                Some(HostName) =>
-                    options.host_name = Some(Self::load_byte_string(&mut raw_options)?),
-                Some(RequestedIpAddr) =>
-                    options.requested_ip_addr = Some(Self::load_ip_addr(&mut raw_options)?),
-                Some(LeaseTime) =>
-                    options.lease_time = Some(Self::load_u32(&mut raw_options)?),
-                Some(OptionOverload) =>
-                    unimplemented!(),
-                Some(MessageType) if seen_type => return Err(Error::InvalidOption),
-                Some(MessageType) => {
-                    seen_type = true;
-                    options.message_type = Self::load_message_type(&mut raw_options)?;
-                }
-                Some(ServerIdentifier) =>
-                    options.server_identifier = Some(Self::load_u32(&mut raw_options)?),
-                Some(ParameterRequestList) => options.parameter_request_list =
-                    Some(Self::load_parameter_request_list(&mut raw_options)?),
-                Some(Message) =>
-                    options.message = Some(Self::load_byte_string(&mut raw_options)?),
-                Some(RenewalTime) =>
-                    options.renewal_time = Some(Self::load_u32(&mut raw_options)?),
-                Some(RebindingTime) =>
-                    options.rebinding_time = Some(Self::load_u32(&mut raw_options)?),
-                Some(ClientIdentifier) =>
-                    options.client_identifier = Some(Self::load_byte_string(&mut raw_options)?),
-                None => Self::skip_option_body(&mut raw_options)?,
-            }
-        }
-
-        if !seen_type || !seen_end {
-            return Err(Error::InvalidOption);
-        }
-
-        if options.option_overload.is_some() {
-            unimplemented!() // TODO Implement this properly
-        }
-
-        Ok(options)
+    fn decode(sname: &[u8], file: &[u8], raw_options: &[u8]) -> Result<Self> {
+        options_decoding::decode_options(sname, file, raw_options)
     }
 
-    fn check_magic_cookie<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<()> {
-        let cookie = [
-            Self::next_byte(raw_options)?, Self::next_byte(raw_options)?,
-            Self::next_byte(raw_options)?, Self::next_byte(raw_options)?,
-        ];
-
-        if cookie == [99, 130, 83, 99] {
-            Ok(())
-        } else {
-            Err(Error::InvalidOption)
-        }
-    }
-
-    fn decode_raw_option(raw_option: u8) -> Option<MessageOption> {
-        use MessageOption::*;
-
-        const PAD: u8 = Pad as u8;
-        const SUBNET_MASK: u8 = SubnetMask as u8;
-        const ROUTER: u8 = Router as u8;
-        const DOMAIN_NAME_SERVER: u8 = DomainNameServer as u8;
-        const HOST_NAME: u8 = HostName as u8;
-        const REQUESTED_IP_ADDR: u8 = RequestedIpAddr as u8;
-        const LEASE_TIME: u8 = LeaseTime as u8;
-        const OPTION_OVERLOAD: u8 = OptionOverload as u8;
-        const MESSAGE_TYPE: u8 = MessageType as u8;
-        const SERVER_IDENTIFIER: u8 = ServerIdentifier as u8;
-        const PARAMETER_REQUEST_LIST: u8 = ParameterRequestList as u8;
-        const MESSAGE: u8 = Message as u8;
-        const RENEWAL_TIME: u8 = RenewalTime as u8;
-        const REBINDING_TIME: u8 = RebindingTime as u8;
-        const CLIENT_IDENTIFIER: u8 = ClientIdentifier as u8;
-        const END: u8 = End as u8;
-
-        match raw_option {
-            PAD => Some(Pad),
-            SUBNET_MASK => Some(SubnetMask),
-            ROUTER => Some(Router),
-            DOMAIN_NAME_SERVER => Some(DomainNameServer),
-            HOST_NAME => Some(HostName),
-            REQUESTED_IP_ADDR => Some(RequestedIpAddr),
-            LEASE_TIME => Some(LeaseTime),
-            OPTION_OVERLOAD => Some(OptionOverload),
-            MESSAGE_TYPE => Some(MessageType),
-            SERVER_IDENTIFIER => Some(ServerIdentifier),
-            PARAMETER_REQUEST_LIST => Some(ParameterRequestList),
-            MESSAGE => Some(Message),
-            RENEWAL_TIME => Some(RenewalTime),
-            REBINDING_TIME => Some(RebindingTime),
-            CLIENT_IDENTIFIER => Some(ClientIdentifier),
-            END => Some(End),
-            _ => None,
-        }
-    }
-
-    fn skip_option_body<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<()> {
-        let length = Self::next_byte(raw_options)?;
-        for _ in 0..length {
-            Self::next_byte(raw_options)?;
-        }
-        Ok(())
-    }
-
-    fn load_ip_addr<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<Ipv4Addr> {
-        let length = Self::next_byte(raw_options)?;
-        if length != 4 {
-            Err(Error::InvalidOption)
-        } else {
-            let a = Self::next_byte(raw_options)?;
-            let b = Self::next_byte(raw_options)?;
-            let c = Self::next_byte(raw_options)?;
-            let d = Self::next_byte(raw_options)?;
-            Ok(Ipv4Addr::new(a, b, c, d))
-        }
-    }
-
-    fn load_ip_addrs<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<Vec<Ipv4Addr>> {
-        let length = Self::next_byte(raw_options)?;
-        if length % 4 != 0 {
-            Err(Error::InvalidOption)
-        } else {
-            raw_options
-                .take(length as usize)
-                .chunks(4)
-                .into_iter()
-                .map(|mut ip_chunks| {
-                    let a = Self::next_byte(&mut ip_chunks)?;
-                    let b = Self::next_byte(&mut ip_chunks)?;
-                    let c = Self::next_byte(&mut ip_chunks)?;
-                    let d = Self::next_byte(&mut ip_chunks)?;
-                    Ok(Ipv4Addr::new(a, b, c, d))
-                })
-                .collect()
-        }
-    }
-
-    fn load_byte_string<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<Vec<u8>> {
-        let length = Self::next_byte(raw_options)? as usize;
-        let result: Vec<u8> = raw_options.take(length).map(|x| *x).collect();
-        if result.len() == length {
-            Ok(result)
-        } else {
-            Err(Error::InvalidOption)
-        }
-    }
-
-    fn load_u32<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<u32> {
-        let length = Self::next_byte(raw_options)?;
-        if length != 4 {
-            Err(Error::InvalidOption)
-        } else {
-            Ok(u32::from_be_bytes([
-                Self::next_byte(raw_options)?,
-                Self::next_byte(raw_options)?,
-                Self::next_byte(raw_options)?,
-                Self::next_byte(raw_options)?,
-            ]))
-        }
-    }
-
-    fn load_message_type<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<MessageType> {
-        let length = *raw_options.next().ok_or(Error::InvalidOption)? as usize;
-        if length == 0 {
-            Err(Error::InvalidOption)
-        } else {
-            const DISCOVER: u8 = MessageType::Discover as u8;
-            const OFFER: u8 = MessageType::Offer as u8;
-            const REQUEST: u8 = MessageType::Request as u8;
-            const DECLINE: u8 = MessageType::Decline as u8;
-            const ACK: u8 = MessageType::ACK as u8;
-            const NAK: u8 = MessageType::NAK as u8;
-            const RELEASE: u8 = MessageType::Release as u8;
-
-            match Self::next_byte(raw_options)? {
-                DISCOVER => Ok(MessageType::Discover),
-                OFFER => Ok(MessageType::Offer),
-                REQUEST => Ok(MessageType::Request),
-                DECLINE => Ok(MessageType::Decline),
-                ACK => Ok(MessageType::ACK),
-                NAK => Ok(MessageType::NAK),
-                RELEASE => Ok(MessageType::Release),
-                _ => Err(Error::InvalidOption),
-            }
-        }
-    }
-
-    fn load_parameter_request_list<'a>(
-        raw_options: &mut impl Iterator<Item=&'a u8>
-    ) -> Result<Vec<MessageOption>> {
-        let length = Self::next_byte(raw_options)? as usize;
-        Ok(raw_options
-            .take(length)
-            .filter_map(|&o| Self::decode_raw_option(o))
-            .collect()
-        )
-    }
-
-    fn next_byte<'a>(raw_options: &mut impl Iterator<Item=&'a u8>) -> Result<u8> {
-        Ok(*raw_options.next().ok_or(Error::InvalidOption)?)
+    fn encode(&self, buf: &mut [u8; RawMessage::MAX_OPTIONS_SIZE]) -> Result<()> {
+        options_encoding::encode_options(buf, self)
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
-enum OptionOverload {
+pub enum OptionOverload {
     File = 1,
     Sname = 2,
     FileAndSname = 3,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
-enum MessageType {
+pub enum MessageType {
     Discover = 1,
     Offer = 2,
     Request = 3,
@@ -504,7 +303,7 @@ mod tests {
         assert!(msg.options[1..].iter().all(|&x| x == 0u8));
 
         let mut encoded = [0; RawMessage::MAX_SIZE];
-        msg.encode(&mut encoded);
+        msg.encode(&mut encoded).unwrap();
         for (k, &v) in encoded.iter().enumerate() {
             assert_eq!(buf[k], v);
         }
@@ -515,7 +314,7 @@ mod tests {
         let mut raw_options = [0; RawMessage::MAX_OPTIONS_SIZE]; // Missing magic cookie
         assert_eq!(
             MessageOptions::decode(&[], &[], &raw_options),
-            Err(Error::InvalidOption),
+            Err(Error::OptionDecodingFailed),
         );
 
         raw_options[0] = 99;
@@ -524,13 +323,13 @@ mod tests {
         raw_options[3] = 99; // Has magic cookie, but now missing end
         assert_eq!(
             MessageOptions::decode(&[], &[], &raw_options),
-            Err(Error::InvalidOption),
+            Err(Error::OptionDecodingFailed),
         );
 
         raw_options[4] = 255; // Has end, but now missing message type
         assert_eq!(
             MessageOptions::decode(&[], &[], &raw_options),
-            Err(Error::InvalidOption),
+            Err(Error::OptionDecodingFailed),
         );
 
         raw_options[4] = 53;
@@ -538,7 +337,7 @@ mod tests {
         raw_options[6] = 2; // Has message type DHCPOFFER, but now missing end
         assert_eq!(
             MessageOptions::decode(&[], &[], &raw_options),
-            Err(Error::InvalidOption),
+            Err(Error::OptionDecodingFailed),
         );
 
         raw_options[7] = 255; // Now also has end
@@ -549,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn options_decode_discover() {
+    fn options_decode_encode_discover() {
         let raw_options = [
             0x63, 0x82, 0x53, 0x63, // Magic cookie
             0x35, 0x01, 0x01, // Message type: DHCPDISCOVER
@@ -567,13 +366,26 @@ mod tests {
             MessageOption::HostName,
         ]);
         assert_eq!(
-            MessageOptions::decode(&[], &[], &raw_options),
-            Ok(expected_options),
+            &MessageOptions::decode(&[], &[], &raw_options).unwrap(),
+            &expected_options,
         );
+
+        let mut encoded_options = [0; RawMessage::MAX_OPTIONS_SIZE];
+        expected_options.encode(&mut encoded_options).unwrap();
+        let mut expected_encoded_options = [0; RawMessage::MAX_OPTIONS_SIZE];
+        utils::copy_slice(&mut expected_encoded_options, &[
+            0x63, 0x82, 0x53, 0x63, // Magic cookie
+            0x0c, 0x05, 0x64, 0x6f, 0x67, 0x67, 0x73, // Hostname: doggs
+            0x35, 0x01, 0x01, // Message type: DHCPDISCOVER
+            0x37, 0x04, 0x01, 0x03, 0x06, 0x0c,
+            // Parameter request list
+            0xff, // End
+        ]);
+        assert_equal_bytes(&encoded_options, &expected_encoded_options);
     }
 
     #[test]
-    fn options_decode_offer() {
+    fn options_decode_encode_offer() {
         let raw_options = [
             0x63, 0x82, 0x53, 0x63, // Magic cookie
             0x35, 0x01, 0x02, // Message type: DHCPOFFER
@@ -596,8 +408,34 @@ mod tests {
         expected_options.domain_name_server = Some(vec![Ipv4Addr::new(192, 168, 1, 1)]);
         expected_options.router = Some(vec![Ipv4Addr::new(192, 168, 1, 1)]);
         assert_eq!(
-            MessageOptions::decode(&[], &[], &raw_options),
-            Ok(expected_options),
+            &MessageOptions::decode(&[], &[], &raw_options).unwrap(),
+            &expected_options,
         );
+
+        let mut encoded_options = [0; RawMessage::MAX_OPTIONS_SIZE];
+        expected_options.encode(&mut encoded_options).unwrap();
+        let mut expected_encoded_options = [0; RawMessage::MAX_OPTIONS_SIZE];
+        utils::copy_slice(&mut expected_encoded_options, &[
+            0x63, 0x82, 0x53, 0x63, // Magic cookie
+            0x01, 0x04, 0xff, 0xff, 0xff, 0x00, // Subnet mask: 255.255.255.0
+            0x03, 0x04, 0xc0, 0xa8, 0x01, 0x01, // Router: 192.168.1.1
+            0x06, 0x04, 0xc0, 0xa8, 0x01, 0x01, // Domain name server: 192.168.1.1
+            0x33, 0x04, 0x00, 0x01, 0x51, 0x80, // Lease time: 86400s (1 day)
+            0x35, 0x01, 0x02, // Message type: DHCPOFFER
+            0x36, 0x04, 0x00, 0x00, 0x00, 0x02, // Server identifier: 2
+            0x3a, 0x04, 0x00, 0x00, 0xa8, 0xc0, // Renewal time: 43200s (12 hours)
+            0x3b, 0x04, 0x00, 0x01, 0x27, 0x50, // Rebinding time: 75600s (21 hours)
+            0xff // End
+        ]);
+        assert_equal_bytes(&encoded_options, &expected_encoded_options);
+    }
+
+    fn assert_equal_bytes(a: &[u8], b: &[u8]) {
+        for ((k1, v1), (k2, v2)) in a
+            .iter()
+            .enumerate()
+            .zip(b.iter().enumerate()) {
+            assert_eq!((k1, v1), (k2, v2));
+        }
     }
 }

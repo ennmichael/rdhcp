@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="BranchesTreeState">
     <expand>
       <path>
@@ -15,8 +18,9 @@
   <component name="ChangeListManager">
     <list default="true" id="b0ff3691-a46d-4a5e-bffc-99334295d525" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/messaging.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/messaging.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,7 +59,7 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="org.elm.workspace.PROJECT_DISCOVERY" value="true" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RunManager" selected="Cargo.Test">
@@ -90,7 +94,9 @@
       <option name="emulateTerminal" value="false" />
       <option name="backtrace" value="SHORT" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
+      <envs>
+        <env name="RUSTFLAGS" value="-A dead_code" />
+      </envs>
       <method v="2">
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
@@ -125,7 +131,9 @@
       <workItem from="1600699405000" duration="9869000" />
       <workItem from="1600724831744" duration="17751000" />
       <workItem from="1600961332664" duration="2157000" />
-      <workItem from="1600963598080" duration="5882000" />
+      <workItem from="1600963598080" duration="11329000" />
+      <workItem from="1601040544524" duration="4724000" />
+      <workItem from="1601063916502" duration="4648000" />
     </task>
     <task id="LOCAL-00001" summary="Added raw message encoding">
       <created>1600618479988</created>
@@ -134,7 +142,14 @@
       <option name="project" value="LOCAL" />
       <updated>1600618479988</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added some tests for message decoding">
+      <created>1600969810713</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1600969810713</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,14 +169,15 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added raw message encoding" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added raw message encoding" />
+    <MESSAGE value="Added some tests for message decoding" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added some tests for message decoding" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="197" y="70" width="1084" height="708" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1600968007454">
+    <state x="197" y="70" width="1084" height="708" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1601066521470">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="140" y="50" width="1084" height="708" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1600612102175" />
-    <state x="197" y="70" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1080@0.0.1920.1080" timestamp="1600968007454" />
+    <state x="197" y="70" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1080@0.0.1920.1080" timestamp="1601066521470" />
     <state x="0" y="19" width="749" height="747" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog" timestamp="1600613781986">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
@@ -174,42 +190,56 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="772" y="282" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080@0.0.1920.1080" timestamp="1600962251704" />
+    <state x="519" y="122" key="CommitChangelistDialog2" timestamp="1600969810469">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="519" y="122" key="CommitChangelistDialog2/0.0.1920.1080@0.0.1920.1080" timestamp="1600969810469" />
+    <state x="582" y="176" key="EnvironmentVariablesDialog" timestamp="1601066517753">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="582" y="176" key="EnvironmentVariablesDialog/0.0.1920.1080@0.0.1920.1080" timestamp="1601066517753" />
     <state x="448" y="165" key="FileChooserDialogImpl" timestamp="1600682293863">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="448" y="165" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1600682293863" />
-    <state width="1876" height="291" key="GridCell.Tab.0.bottom" timestamp="1600969174704">
+    <state width="1876" height="291" key="GridCell.Tab.0.bottom" timestamp="1601068235480">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1318" height="187" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
-    <state width="1876" height="291" key="GridCell.Tab.0.bottom/0.0.1920.1080@0.0.1920.1080" timestamp="1600969174704" />
-    <state width="1876" height="291" key="GridCell.Tab.0.center" timestamp="1600969174702">
+    <state width="1876" height="291" key="GridCell.Tab.0.bottom/0.0.1920.1080@0.0.1920.1080" timestamp="1601068235480" />
+    <state width="1876" height="291" key="GridCell.Tab.0.center" timestamp="1601068235477">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1318" height="187" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
-    <state width="1876" height="291" key="GridCell.Tab.0.center/0.0.1920.1080@0.0.1920.1080" timestamp="1600969174702" />
-    <state width="1876" height="291" key="GridCell.Tab.0.left" timestamp="1600969174701">
+    <state width="1876" height="291" key="GridCell.Tab.0.center/0.0.1920.1080@0.0.1920.1080" timestamp="1601068235477" />
+    <state width="1876" height="291" key="GridCell.Tab.0.left" timestamp="1601068235476">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1318" height="187" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1600819013674" />
-    <state width="1876" height="291" key="GridCell.Tab.0.left/0.0.1920.1080@0.0.1920.1080" timestamp="1600969174701" />
-    <state width="1876" height="291" key="GridCell.Tab.0.right" timestamp="1600969174703">
+    <state width="1876" height="291" key="GridCell.Tab.0.left/0.0.1920.1080@0.0.1920.1080" timestamp="1601068235476" />
+    <state width="1876" height="291" key="GridCell.Tab.0.right" timestamp="1601068235479">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1318" height="187" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1600819013676" />
-    <state width="1876" height="291" key="GridCell.Tab.0.right/0.0.1920.1080@0.0.1920.1080" timestamp="1600969174703" />
-    <state x="0" y="42" key="SettingsEditor" timestamp="1600724818491">
-      <screen x="0" y="0" width="1366" height="768" />
+    <state width="1876" height="291" key="GridCell.Tab.0.right/0.0.1920.1080@0.0.1920.1080" timestamp="1601068235479" />
+    <state x="0" y="59" key="SettingsEditor" timestamp="1600970132747">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="0" y="42" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1600724818491" />
-    <state x="282" y="143" key="Vcs.Push.Dialog.v2" timestamp="1600618481083">
-      <screen x="0" y="0" width="1366" height="768" />
+    <state x="0" y="59" key="SettingsEditor/0.0.1920.1080@0.0.1920.1080" timestamp="1600970132747" />
+    <state x="396" y="201" key="Vcs.Push.Dialog.v2" timestamp="1600969814054">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="282" y="143" key="Vcs.Push.Dialog.v2/0.0.1366.768@0.0.1366.768" timestamp="1600618481083" />
-    <state x="485" y="125" width="945" height="954" key="search.everywhere.popup" timestamp="1600968481863">
+    <state x="396" y="201" key="Vcs.Push.Dialog.v2/0.0.1920.1080@0.0.1920.1080" timestamp="1600969814054" />
+    <state x="623" y="259" key="run.anything.popup" timestamp="1600971855144">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="623" y="259" key="run.anything.popup/0.0.1920.1080@0.0.1920.1080" timestamp="1600971855144" />
+    <state x="485" y="125" width="945" height="954" key="search.everywhere.popup" timestamp="1601068011312">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="345" y="89" width="672" height="678" key="search.everywhere.popup/0.0.1366.768@0.0.1366.768" timestamp="1600817384267" />
-    <state x="485" y="125" width="945" height="954" key="search.everywhere.popup/0.0.1920.1080@0.0.1920.1080" timestamp="1600968481863" />
+    <state x="485" y="125" width="945" height="954" key="search.everywhere.popup/0.0.1920.1080@0.0.1920.1080" timestamp="1601068011312" />
   </component>
 </project>

@@ -4,7 +4,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     MessageDecoding(String),
     MessageInterpretation(String),
-    InvalidOption,
+    OptionDecodingFailed,
+    OptionEncodingFailed,
 }
 
 pub fn copy_slice(dst: &mut [u8], src: &[u8]) {
