@@ -1,7 +1,8 @@
 use std::convert::TryInto;
 use std::net::Ipv4Addr;
 
-use crate::utils::{self, Error, Result};
+use crate::errors::{Error, Result};
+use crate::utils;
 
 mod options_decoding;
 mod options_encoding;
@@ -35,9 +36,9 @@ impl RawMessage {
 
     fn decode(buf: &[u8]) -> Result<RawMessage> {
         if buf.len() < 236 { // TODO This isn't right, as at least some data must be present in `options`
-            Err(Error::MessageDecoding(String::from("Invalid buffer: buffer too small")))
+            Err(Error::MessageDecodingFailed)
         } else if buf.len() > 236 + Self::MAX_OPTIONS_SIZE {
-            Err(Error::MessageDecoding(String::from("Invalid buffer: buffer too big")))
+            Err(Error::MessageDecodingFailed)
         } else {
             let mut options = [0; 1024];
             utils::copy_slice(&mut options, &buf[236..]);
@@ -107,7 +108,7 @@ impl Message {
             } else if raw.op == MessageOp::Reply as u8 {
                 MessageOp::Reply
             } else {
-                return Err(Error::MessageInterpretation(String::from("Op field is invalid")));
+                return Err(Error::InvalidMessage);
             },
             htype: raw.htype,
             hlen: raw.hlen,
@@ -117,7 +118,7 @@ impl Message {
             } else if raw.flags == 0 {
                 false
             } else {
-                return Err(Error::MessageInterpretation(String::from("Flags field is invalid")));
+                return Err(Error::InvalidMessage);
             },
             ciaddr: Ipv4Addr::from(raw.ciaddr),
             yiaddr: Ipv4Addr::from(raw.yiaddr),

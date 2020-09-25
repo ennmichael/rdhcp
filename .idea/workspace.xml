@@ -20,6 +20,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/messaging.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/messaging.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/messaging/options_decoding.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/messaging/options_decoding.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/messaging/options_encoding.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/messaging/options_encoding.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -133,7 +135,7 @@
       <workItem from="1600961332664" duration="2157000" />
       <workItem from="1600963598080" duration="11329000" />
       <workItem from="1601040544524" duration="4724000" />
-      <workItem from="1601063916502" duration="4648000" />
+      <workItem from="1601063916502" duration="7158000" />
     </task>
     <task id="LOCAL-00001" summary="Added raw message encoding">
       <created>1600618479988</created>
@@ -149,7 +151,14 @@
       <option name="project" value="LOCAL" />
       <updated>1600969810713</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Added message encoding and tests">
+      <created>1601068596239</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1601068596240</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -170,7 +179,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added raw message encoding" />
     <MESSAGE value="Added some tests for message decoding" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added some tests for message decoding" />
+    <MESSAGE value="Added message encoding and tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added message encoding and tests" />
   </component>
   <component name="WindowStateProjectService">
     <state x="197" y="70" width="1084" height="708" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1601066521470">
@@ -186,14 +196,14 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="330" y="209" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1366.768@0.0.1366.768" timestamp="1600526933964" />
-    <state x="772" y="282" key="#com.intellij.ide.util.MemberChooser" timestamp="1600962251704">
+    <state x="772" y="282" key="#com.intellij.ide.util.MemberChooser" timestamp="1601071849768">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="772" y="282" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080@0.0.1920.1080" timestamp="1600962251704" />
-    <state x="519" y="122" key="CommitChangelistDialog2" timestamp="1600969810469">
+    <state x="772" y="282" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080@0.0.1920.1080" timestamp="1601071849768" />
+    <state x="519" y="122" key="CommitChangelistDialog2" timestamp="1601068595964">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="519" y="122" key="CommitChangelistDialog2/0.0.1920.1080@0.0.1920.1080" timestamp="1600969810469" />
+    <state x="519" y="122" key="CommitChangelistDialog2/0.0.1920.1080@0.0.1920.1080" timestamp="1601068595964" />
     <state x="582" y="176" key="EnvironmentVariablesDialog" timestamp="1601066517753">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -227,15 +237,15 @@
     </state>
     <state x="0" y="42" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1600724818491" />
     <state x="0" y="59" key="SettingsEditor/0.0.1920.1080@0.0.1920.1080" timestamp="1600970132747" />
-    <state x="396" y="201" key="Vcs.Push.Dialog.v2" timestamp="1600969814054">
+    <state x="396" y="201" key="Vcs.Push.Dialog.v2" timestamp="1601068598369">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="282" y="143" key="Vcs.Push.Dialog.v2/0.0.1366.768@0.0.1366.768" timestamp="1600618481083" />
-    <state x="396" y="201" key="Vcs.Push.Dialog.v2/0.0.1920.1080@0.0.1920.1080" timestamp="1600969814054" />
-    <state x="623" y="259" key="run.anything.popup" timestamp="1600971855144">
+    <state x="396" y="201" key="Vcs.Push.Dialog.v2/0.0.1920.1080@0.0.1920.1080" timestamp="1601068598369" />
+    <state x="623" y="259" key="run.anything.popup" timestamp="1601072310123">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="623" y="259" key="run.anything.popup/0.0.1920.1080@0.0.1920.1080" timestamp="1600971855144" />
+    <state x="623" y="259" key="run.anything.popup/0.0.1920.1080@0.0.1920.1080" timestamp="1601072310123" />
     <state x="485" y="125" width="945" height="954" key="search.everywhere.popup" timestamp="1601068011312">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>

@@ -2,7 +2,7 @@ use std::net::Ipv4Addr;
 
 use itertools::Itertools;
 
-use crate::messaging::utils::{Error, Result};
+use crate::errors::{Error, Result};
 
 use super::{MessageOption, MessageOptions, MessageType};
 
